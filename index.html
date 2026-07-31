@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABEL123 :: DEEP SCAN</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0E14;
+  --bg-panel: #10161f;
+  --bg-panel-2: #141b26;
+  --cyan: #4DE8E0;
+  --violet: #9D7CFF;
+  --critical: #ff3b6b;
+  --high: #ff8a3d;
+  --medium: #ffd23d;
+  --low: #4de8e0;
+  --info: #7d8aa0;
+  --border: rgba(77, 232, 224, 0.15);
+  --text: #d8e2ef;
+  --text-dim: #6b7a90;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(77,232,224,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,232,224,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.scanline {
+  position: fixed; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  animation: scan 6s linear infinite;
+  opacity: 0.4; z-index: 999; pointer-events: none;
+}
+@keyframes scan { 0%{top:0%} 100%{top:100%} }
+
+.hud-corner { position: absolute; width: 14px; height: 14px; }
+.hud-corner.tl { top:-1px; left:-1px; border-top:2px solid var(--cyan); border-left:2px solid var(--cyan); }
+.hud-corner.tr { top:-1px; right:-1px; border-top:2px solid var(--cyan); border-right:2px solid var(--cyan); }
+.hud-corner.bl { bottom:-1px; left:-1px; border-bottom:2px solid var(--cyan); border-left:2px solid var(--cyan); }
+.hud-corner.br { bottom:-1px; right:-1px; border-bottom:2px solid var(--cyan); border-right:2px solid var(--cyan); }
+
+header {
+  padding: 24px 20px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: clamp(20px, 5vw, 32px);
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.subtitle { color: var(--text-dim); font-size: 11px; letter-spacing: 2px; margin-top: 6px; text-transform: uppercase; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px;
+  margin-bottom: 20px;
+  position: relative;
+}
+.panel-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-title::before { content: '▸'; color: var(--violet); }
+
+.warning-box {
+  background: rgba(255, 59, 107, 0.08);
+  border: 1px solid rgba(255, 59, 107, 0.3);
+  border-radius: 4px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #ffb3c4;
+}
+.warning-box b { color: var(--critical); }
+
+label { display:block; font-size: 11px; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+input[type="text"] {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+input[type="text"]:focus { outline: none; border-color: var(--cyan); }
+
+.module-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.module-toggle {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: border-color 0.2s;
+}
+.module-toggle.active { border-color: var(--cyan); background: rgba(77,232,224,0.06); }
+.module-toggle input { accent-color: var(--cyan); }
+
+.checkbox-row { display:flex; align-items:flex-start; gap: 10px; margin-bottom: 18px; font-size: 12px; line-height: 1.5; color: var(--text-dim); }
+.checkbox-row input { margin-top: 3px; accent-color: var(--critical); }
+
+button.scan-btn {
+  width: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  color: #0A0E14;
+  border: none;
+  padding: 14px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 13px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: opacity 0.2s;
+}
+button.scan-btn:hover { opacity: 0.85; }
+button.scan-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.error-msg { color: var(--critical); font-size: 12px; margin-top: -8px; margin-bottom: 12px; display:none; }
+
+/* Live dashboard */
+#dashboard { display: none; }
+
+.status-bar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+.status-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; letter-spacing: 1.5px; padding: 5px 12px; border-radius: 3px;
+  background: rgba(77,232,224,0.1); color: var(--cyan); border: 1px solid var(--border);
+}
+.status-badge.voltooid { background: rgba(77,232,224,0.15); }
+.status-badge.fout { background: rgba(255,59,107,0.15); color: var(--critical); border-color: rgba(255,59,107,0.3); }
+
+.progress-track { background: var(--bg); border-radius: 3px; height: 8px; overflow: hidden; margin-bottom: 8px; border: 1px solid var(--border); }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); width: 0%; transition: width 0.4s ease; }
+.current-module { font-size: 11px; color: var(--text-dim); margin-bottom: 20px; }
+.current-module span { color: var(--violet); }
+
+.summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+.summary-cell { text-align:center; padding: 10px 4px; border-radius: 3px; border: 1px solid var(--border); background: var(--bg); }
+.summary-cell .num { font-family:'Orbitron',sans-serif; font-size: 20px; font-weight: 700; }
+.summary-cell .lbl { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.summary-cell.critical .num { color: var(--critical); }
+.summary-cell.high .num { color: var(--high); }
+.summary-cell.medium .num { color: var(--medium); }
+.summary-cell.low .num { color: var(--low); }
+.summary-cell.info .num { color: var(--info); }
+
+.tabs { display:flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.tab { padding: 8px 14px; font-size: 11px; letter-spacing: 1px; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase; }
+.tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+.finding {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--info);
+  border-radius: 3px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { opacity:0; transform: translateY(-6px);} to {opacity:1; transform:translateY(0);} }
+.finding.critical { border-left-color: var(--critical); }
+.finding.high { border-left-color: var(--high); }
+.finding.medium { border-left-color: var(--medium); }
+.finding.low { border-left-color: var(--low); }
+.finding.info { border-left-color: var(--info); }
+.finding-head { display:flex; justify-content: space-between; align-items:flex-start; gap: 10px; margin-bottom: 4px; }
+.finding-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.sev-tag { font-size: 9px; letter-spacing: 1px; padding: 2px 8px; border-radius: 2px; text-transform: uppercase; white-space:nowrap; font-family:'Orbitron',sans-serif;}
+.sev-tag.critical { background: rgba(255,59,107,0.15); color: var(--critical); }
+.sev-tag.high { background: rgba(255,138,61,0.15); color: var(--high); }
+.sev-tag.medium { background: rgba(255,210,61,0.15); color: var(--medium); }
+.sev-tag.low { background: rgba(77,232,224,0.15); color: var(--low); }
+.sev-tag.info { background: rgba(125,138,160,0.15); color: var(--info); }
+.finding-detail { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.finding-evidence { font-size: 11px; color: var(--violet); margin-top: 6px; background: rgba(157,124,255,0.06); padding: 6px 8px; border-radius: 2px; word-break: break-all; }
+.finding-module { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+.log-line { font-size: 11px; color: var(--text-dim); padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.log-line .t { color: var(--cyan); margin-right: 8px; }
+
+.empty-state { text-align:center; padding: 30px 10px; color: var(--text-dim); font-size: 12px; }
+
+.report-actions { display:flex; gap: 10px; margin-top: 16px; }
+.report-actions button {
+  flex: 1; background: transparent; border: 1px solid var(--border); color: var(--cyan);
+  padding: 10px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; cursor: pointer; text-transform: uppercase;
+}
+.report-actions button:hover { background: rgba(77,232,224,0.08); }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<header>
+  <h1>DEEP SCAN</h1>
+  <div class="subtitle">Abel123 :: Webapp Kwetsbaarheidsscanner</div>
+</header>
+
+<div class="container">
+
+  <div class="panel" id="config-panel">
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="panel-title">Scan Configuratie</div>
+
+    <div class="warning-box">
+      <b>Alleen voor eigen systemen.</b> Deze tool voert actieve checks uit (poortscan, XSS/SQLi testpayloads).
+      Scan uitsluitend domeinen/IP's die je zelf bezit of waarvoor je schriftelijke toestemming hebt.
+      Ongeautoriseerd scannen kan strafbaar zijn onder art. 138ab Sr (computervredebreuk). Alle scans worden lokaal gelogd.
+    </div>
+
+    <label>Doelwit (domein of URL)</label>
+    <input type="text" id="target-input" placeholder="bijv. abelsoftware123.nl of https://mijnsite.nl">
+
+    <label>Modules</label>
+    <div class="module-grid">
+      <div class="module-toggle active" data-module="passief">
+        <input type="checkbox" checked> Passief (headers/SSL)
+      </div>
+      <div class="module-toggle active" data-module="netwerk">
+        <input type="checkbox" checked> Poortscan
+      </div>
+      <div class="module-toggle active" data-module="cve">
+        <input type="checkbox" checked> CVE-lookup
+      </div>
+      <div class="module-toggle active" data-module="vuln">
+        <input type="checkbox" checked> XSS/SQLi test
+      </div>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="scope-confirm">
+      <label style="margin:0; text-transform:none; letter-spacing:0;" for="scope-confirm">
+        Ik bevestig dat dit domein/IP van mijn eigen bedrijf/systemen is, of dat ik expliciete schriftelijke toestemming heb om het te testen.
+      </label>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+    <button class="scan-btn" id="start-btn">Start Deep Scan</button>
+  </div>
+
+  <div class="panel" id="dashboard">
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="panel-title">Live Scan Dashboard</div>
+
+    <div class="status-bar">
+      <span class="status-badge" id="status-badge">GESTART</span>
+      <span style="font-size:11px; color:var(--text-dim);" id="target-label"></span>
+    </div>
+
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="current-module">Actieve module: <span id="current-module-label">init</span></div>
+
+    <div class="summary-grid">
+      <div class="summary-cell critical"><div class="num" id="sum-critical">0</div><div class="lbl">Critical</div></div>
+      <div class="summary-cell high"><div class="num" id="sum-high">0</div><div class="lbl">High</div></div>
+      <div class="summary-cell medium"><div class="num" id="sum-medium">0</div><div class="lbl">Medium</div></div>
+      <div class="summary-cell low"><div class="num" id="sum-low">0</div><div class="lbl">Low</div></div>
+      <div class="summary-cell info"><div class="num" id="sum-info">0</div><div class="lbl">Info</div></div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="findings">Bevindingen</div>
+      <div class="tab" data-tab="log">Live Log</div>
+    </div>
+
+    <div id="findings-tab">
+      <div id="findings-list"><div class="empty-state">Nog geen bevindingen...</div></div>
+    </div>
+    <div id="log-tab" style="display:none; max-height: 400px; overflow-y:auto;">
+      <div id="log-list"><div class="empty-state">Log wordt gestart...</div></div>
+    </div>
+
+    <div class="report-actions">
+      <button id="download-json">JSON Rapport</button>
+      <button id="new-scan-btn">Nieuwe Scan</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const configPanel = document.getElementById('config-panel');
+const dashboard = document.getElementById('dashboard');
+const startBtn = document.getElementById('start-btn');
+const errorMsg = document.getElementById('error-msg');
+const targetInput = document.getElementById('target-input');
+const scopeConfirm = document.getElementById('scope-confirm');
+
+let currentScanId = null;
+let pollInterval = null;
+let renderedFindingIds = new Set();
+let renderedLogCount = 0;
+
+document.querySelectorAll('.module-toggle').forEach(el => {
+  el.addEventListener('click', () => {
+    const checkbox = el.querySelector('input');
+    checkbox.checked = !checkbox.checked;
+    el.classList.toggle('active', checkbox.checked);
+  });
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('findings-tab').style.display = target === 'findings' ? 'block' : 'none';
+    document.getElementById('log-tab').style.display = target === 'log' ? 'block' : 'none';
+  });
+});
+
+function getSelectedModules() {
+  const modules = [];
+  document.querySelectorAll('.module-toggle').forEach(el => {
+    if (el.querySelector('input').checked) modules.push(el.dataset.module);
+  });
+  return modules;
+}
+
+startBtn.addEventListener('click', async () => {
+  errorMsg.style.display = 'none';
+  const target = targetInput.value.trim();
+  const modules = getSelectedModules();
+
+  if (!target) {
+    errorMsg.textContent = 'Voer een doelwit in.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+  if (!scopeConfirm.checked) {
+    errorMsg.textContent = 'Je moet bevestigen dat dit jouw eigen systeem is.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+  if (modules.length === 0) {
+    errorMsg.textContent = 'Selecteer minstens één module.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  startBtn.disabled = true;
+  startBtn.textContent = 'Starten...';
+
+  try {
+    const res = await fetch('/api/scan/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, scope_confirmed: true, modules })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      errorMsg.textContent = data.error || 'Onbekende fout';
+      errorMsg.style.display = 'block';
+      startBtn.disabled = false;
+      startBtn.textContent = 'Start Deep Scan';
+      return;
+    }
+    currentScanId = data.scan_id;
+    renderedFindingIds = new Set();
+    renderedLogCount = 0;
+    document.getElementById('findings-list').innerHTML = '';
+    document.getElementById('log-list').innerHTML = '';
+    document.getElementById('target-label').textContent = target;
+    configPanel.style.display = 'none';
+    dashboard.style.display = 'block';
+    startPolling();
+  } catch (e) {
+    errorMsg.textContent = 'Kon geen verbinding maken met backend. Draait app.py?';
+    errorMsg.style.display = 'block';
+    startBtn.disabled = false;
+    startBtn.textContent = 'Start Deep Scan';
+  }
+});
+
+function severityIcon(sev) {
+  return { critical: '⬤', high: '◆', medium: '▲', low: '●', info: '○' }[sev] || '○';
+}
+
+function renderFinding(f) {
+  if (renderedFindingIds.has(f.id)) return;
+  renderedFindingIds.add(f.id);
+  const list = document.getElementById('findings-list');
+  const emptyState = list.querySelector('.empty-state');
+  if (emptyState) emptyState.remove();
+
+  const div = document.createElement('div');
+  div.className = 'finding ' + f.severity;
+  div.innerHTML = `
+    <div class="finding-head">
+      <span class="finding-title">${escapeHtml(f.title)}</span>
+      <span class="sev-tag ${f.severity}">${f.severity}</span>
+    </div>
+    <div class="finding-detail">${escapeHtml(f.detail)}</div>
+    ${f.evidence ? `<div class="finding-evidence">payload: ${escapeHtml(f.evidence)}</div>` : ''}
+    <div class="finding-module">${f.module}</div>
+  `;
+  list.prepend(div);
+}
+
+function renderLog(entries) {
+  const list = document.getElementById('log-list');
+  const emptyState = list.querySelector('.empty-state');
+  if (entries.length > 0 && emptyState) emptyState.remove();
+
+  for (let i = renderedLogCount; i < entries.length; i++) {
+    const e = entries[i];
+    const div = document.createElement('div');
+    div.className = 'log-line';
+    const time = new Date(e.timestamp).toLocaleTimeString('nl-NL');
+    div.innerHTML = `<span class="t">[${time}]</span>${escapeHtml(e.message)}`;
+    list.appendChild(div);
+  }
+  renderedLogCount = entries.length;
+  list.scrollTop = list.scrollHeight;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function startPolling() {
+  pollInterval = setInterval(async () => {
+    if (!currentScanId) return;
+    try {
+      const res = await fetch(`/api/scan/${currentScanId}/status`);
+      const scan = await res.json();
+      if (!res.ok) return;
+
+      document.getElementById('status-badge').textContent = scan.status.toUpperCase();
+      document.getElementById('status-badge').className = 'status-badge ' + scan.status;
+      document.getElementById('progress-fill').style.width = scan.progress + '%';
+      document.getElementById('current-module-label').textContent = scan.current_module;
+
+      scan.findings.forEach(renderFinding);
+      renderLog(scan.log);
+
+      const s = scan.summary || {};
+      document.getElementById('sum-critical').textContent = s.critical || 0;
+      document.getElementById('sum-high').textContent = s.high || 0;
+      document.getElementById('sum-medium').textContent = s.medium || 0;
+      document.getElementById('sum-low').textContent = s.low || 0;
+      document.getElementById('sum-info').textContent = s.info || 0;
+
+      if (scan.status === 'voltooid' || scan.status === 'fout') {
+        clearInterval(pollInterval);
+      }
+    } catch (e) {
+      console.error('Polling fout:', e);
+    }
+  }, 1200);
+}
+
+document.getElementById('download-json').addEventListener('click', async () => {
+  if (!currentScanId) return;
+  const res = await fetch(`/api/scan/${currentScanId}/report`);
+  const data = await res.json();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `deepscan_${currentScanId}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('new-scan-btn').addEventListener('click', () => {
+  clearInterval(pollInterval);
+  currentScanId = null;
+  startBtn.disabled = false;
+  startBtn.textContent = 'Start Deep Scan';
+  configPanel.style.display = 'block';
+  dashboard.style.display = 'none';
+  targetInput.value = '';
+  scopeConfirm.checked = false;
+});
+</script>
+</body>
+</html>
