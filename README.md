@@ -42,7 +42,7 @@ pip install -r requirements.txt
 python3 app.py
 ```
 
-Open vervolgens `http://localhost:5000` (of `http://<jouw-ip>:5000` vanaf een ander apparaat op hetzelfde netwerk).
+Open vervolgens `http://localhost:5009` (of `http://<jouw-ip>:5009` vanaf een ander apparaat op hetzelfde netwerk).
 
 1. Vul het doelwit in (domein of volledige URL)
 2. Selecteer de gewenste modules
