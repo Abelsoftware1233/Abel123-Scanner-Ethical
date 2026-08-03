@@ -558,4 +558,4 @@ if __name__ == "__main__":
     print(" ABEL123 :: DEEP SCAN — Webapp Kwetsbaarheidsscanner")
     print(" WAARSCHUWING: gebruik alleen tegen eigen systemen!")
     print("=" * 60)
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
+    app.run(host="0.0.0.0", port=5009, debug=False, threaded=True)
